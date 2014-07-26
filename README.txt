@@ -6,3 +6,4 @@ and open http://localhost:4567/index.html
 
 it uses revealjs (http://lab.hakim.se/reveal-js/) license is in revealjs.LICENSE
 
+or just open or just open http://jackdoe.github.io/talk-extreme-search/
