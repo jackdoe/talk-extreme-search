@@ -334,50 +334,12 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
         </section>
 
         <section>
-	  <h1>the stack</h1>
-	  <h2>single box</h2>
-          lets assume that there are <b>0 bugs per line</b>
-          <hr>
-          <center>
-            <table>
-              <tr><td>ElasticSearch</td><td>400k</td></tr>
-              <tr><td>libraries used by ElasticSearch</td><td>100k</td></tr>
-              <tr><td>JVM</td><td>3.5m</td></tr>
-              <tr><td>linux</td><td>16m</td></tr>
-              <tr><td>flawless tcp stack</td><td>since 1981</td></tr>
-              <tr><td>hardware is just brilliant</td><td>-</td></tr>
-              <tr><td>network cables are awesome</td><td>-</td></tr>
-              <tr><td>switches (juniper)</td><td>5m management</td></tr>
-              <tr><td>temperature 15C</td><td>-</td></tr>
-              <tr><td>humidity 40%</td><td>-</td></tr>
-            </table>
-            total lines of code: <b>25_000_000</b>, humans: <b>?</b>
-          </center>
-          <aside class="notes">
-            picture that<br>
-            from the jvm<br>
-            thru the kernel<br>
-            thru the tcp stack<br>
-            into the ip stack<br>
-            into one of network card's queues<br>
-            thru the cables<br>
-            into the switch<br>
-            the destination mac lookup<br>
-            the router's interface
-            and the other way around up to
-            client.read()
-          </aside>
-        </section>
-
-        <section>
 	  <h1>we are good to go, except..</h1>
           <ul>
             <li class="fragment">everything that takes 100% resources is bound to thrash on itself</li>
             <li class="fragment">no downtime</li>
             <li class="fragment">maintenance</li>
             <li class="fragment">GC</li>
-            <li class="fragment">recovery</li>
-            <li class="fragment">dependencies</li>
           </ul>
             <aside class="notes">
               1 request 10ms<br>
@@ -439,10 +401,10 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
         <section>
           <h2>who is in charge?</h2>
           <p>
-          <ul>
-            <li>create/delete/open/close of indexes</li>
-            <li>shard allocation</li>
-            <li>index metadata</li>
+            <ul>
+              <li>create/delete/open/close of indexes</li>
+              <li>shard allocation</li>
+              <li>index metadata</li>
           </ul>
           <hr>
           <b>master(s)</b>
@@ -454,9 +416,8 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
           <p>
             <ul>
               <li>master election</li>
-              <li>pressure</li>
               <li>master only nodes</li>
-              <li>minimum master nodes</li>
+              <li>minimum master nodes - (N / 2) + 1</li>
             </ul>
             <img src="split.png" width=70%>
           </p>
