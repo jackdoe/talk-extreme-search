@@ -185,24 +185,29 @@ documents in the inverted index are sorted by document id
 	</section>
         <section>
           <h2>everything in one place</h2>
+          count the <b>even</b> numbers from 0 up to 1_000_000
           <pre><code class="cpp">#include &lt;stdio.h&gt;
 #include &lt;sys/time.h&gt;
 int main(void) {
     int i,j;
-    struct timeval t0,t1;    
+    struct timeval t0,t1;
+    gettimeofday(&amp;t0, 0);
 
-    gettimeofday(&amp;t0, 0);    
     for (i = 0; i &lt; 1000000; i++)
         if (i % 2 == 0)
             j++;
+
     gettimeofday(&amp;t1, 0);
     printf("%ld\n", ((t1.tv_sec - t0.tv_sec) * 1000000 + t1.tv_usec - t0.tv_usec) / 1000);
 }</code></pre>
           <p class="fragment">
-            5ms
+            took: 5ms
           </p>
           <p class="fragment">
-            47us with 9000
+            split the work 120 times, took: 47us
+          </p>
+          <p class="fragment">
+            linear
           </p>
         </section>
         <section>
@@ -222,7 +227,7 @@ int main(void) {
 	</section>
 
         <section>
-	  <h2>on my laptop</h2>
+	  <h2>search </h2>
           <pre><code class='perl'>my @docs = ();
 for (1.. (100_000_000 / 120)) {
     push @docs, { name => ($_ % 10 == 0 ? 'new york' : 'new') }
@@ -236,7 +241,7 @@ my $results = search({
             { term => { name => "york" } }
         ]
     }
-                    });
+});
 print "took: @{[ time() - $t0 ]}\n";</code></pre>
           <p class="fragment">
             5.8ms when every 10th document matches
@@ -252,13 +257,13 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
 	  <h2>Wait, so what is really going on here?</h2>
 	  <p>
             <ul>
-              <li>100_000_000 documents</li>
-              <li>finding</li>
-              <li>sorting</li>
-              <li>by relevance</li>
-              <li>on the fly</li>
-              <li>within milliseconds</li>
-              <li>using only 5 boxes</li>
+              <li class="fragment">100_000_000 documents</li>
+              <li class="fragment">finding</li>
+              <li class="fragment">sorting</li>
+              <li class="fragment">by relevance</li>
+              <li class="fragment">on the fly</li>
+              <li class="fragment">within milliseconds</li>
+              <li class="fragment">using only 5 boxes</li>
             </ul>
 	  </p>
           <aside class="notes">
@@ -273,22 +278,22 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
           <p>
             <pre>
               <code>{
-    'new'  => [ 1,   3,   277, 46839, 64973,   78688, ... ], # 876_962 documents
+    'new'  => [ 1,   3,   277, 46000, 64973,   78688, ... ], # 876_962 documents
     'york' => [ 300, 456, 736, 837,   7278 ... 50000, ... ]  # 51_345 documents
 }</code>
           </pre>
           <ol>
             <li class="fragment">pick a leading query</li>
             <li class="fragment">leading = 'york', at 300</li>
-            <li class="fragment"><b>advance</b> 'new' to 300 -> closest is 46839</li>
-            <li class="fragment"><b>advance</b> leading(york) to 46839 -> closest is 50000</li>
+            <li class="fragment"><b>advance</b> 'new' to 300 -> closest is 46000</li>
+            <li class="fragment"><b>advance</b> 'york' to 46000 -> closest is 50000</li>
             <li class="fragment">goto 2. with target 50000</li>
           </ol>
           </p>
           <aside class="notes">
             worst case is that ALL documents from york match on new<br>
           </aside>
-        </section>        
+        </section>
         <section>
           <h2>show me the code!</h2>
           "new AND york"
@@ -308,7 +313,7 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
             }
             return target;
         }
-        // try_again:                        
+        // try_again:
         target = lead.advance(target);
     }
 }
@@ -326,90 +331,10 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
             leapfrog jumps<br>
             even the most complex query is aligning all subqueries to be on the same doc<br>
           </aside>
-
-        </section>
-        <section>
-	  <h1>few issues to fix, then we're good to go</h1>
-	</section>
-
-        <section>
-	  <h2>everything that takes 100% resources is bound to thrash on itself</h2>
-          <p>
-            <center>
-            <table>
-              <tr><td>1</td><td>request</td><td>10ms</td></tr>
-              <tr><td>2</td><td>sequential</td><td>20ms</td></tr>
-              <tr><td>2</td><td>simultaneous</td><td>25ms</td></tr>
-              <tr><td>3</td><td>simultaneous</td><td>40ms</td></tr>
-            </table>
-            </center>
-            <hr>
-          <b>add more boxes</b>
-          <ul>
-            <li>reduces number of requests per box</li>
-            <li>increase the number of shards, reduce time spend per request</li>
-          </ul>
-          </p>
-	</section>
-
-        <section>
-	  <h2>no box can be down</h2>
-          <p>
-            <b>add more boxes, increase number of index replicas</b>
-          </p>
-          <aside class="notes">
-            boxes will go down<br>
-            you will have to move them around<br>
-            groups of boxes are also likely to go down (switch issues, router issues, blade issues, rack issues)<br>
-          </aside>
-	</section>
-
-        <section>
-	  <h2>rince and repeat</h2>
-          <p>
-            <b>add more boxes</b>
-            <ul>
-              <li>increase throughput and resiliende by adding replicas</li>
-              <li>decrease latency by increaseing the number of shards</li>
-            </ul>
-          </p>
-	</section>
-
-
-        <section>
-	  <h2>GC - it <b>will</b> stop randomly for at least a second</h2>
-          <p>
-            <ul>
-              <li>what if it stops for 10 seconds?</li>
-              <li>be carefull with your heap size</li>
-              <li>force GC from outside using JMX</li>
-              <li>write Elaticsearch extension to create GC API endpoint</li>
-              <li>have 2 clusters, one doing GC and one serving traffic</li>
-              <li>have N identical indexes, using custom shard allocation</li>
-              <li>?_preference=_only_node:node_id</li>
-            </ul>
-          </p>
-	</section>
-        <section>
-          <h2>quickly recovering from a disaster</h2>
-          <p>
-          <ul>
-            <li>node is dead</li>
-            <li>cluster is red</li>
-            <li>starts moving things around</li>
-            <li>node comes back</li>
-            <li>while building indexes and serving queries</li>
-          </ul>
-          </p>
-        </section>
-        <section>
-	  <h2>dependencies</h2>
-          <p>
-            the dependencies a distributed system has are just <b>brutal</b>.
-          </p>
         </section>
 
         <section>
+	  <h1>the stack</h1>
 	  <h2>single box</h2>
           lets assume that there are <b>0 bugs per line</b>
           <hr>
@@ -445,137 +370,71 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
         </section>
 
         <section>
-	  <h2>so how many truly <b>untested|undefined</b> codepaths are there?</h2>
-          <p>
-            <ul>in my humble experience i have seen(unreproducable):
-              <li>random stop</li>
-              <li>random 100% cpu</li>
-              <li>reboot and never start again</li>
-              <li>random crash (panics, jvm death etc)</li>
-              <li>deadlock magic everywhere</li>
-              <li>broken tcp state</li>
-              <li>switch sending traffic only to ODD mac addresses</li>
-              <li>NIC firmware messups</li>
-              <li>everything started works, everything new hangs</li>
-            </ul>
-          </p>
-          most of those are due to hardware issues, triggering weird behavior that bubbles up in unpredictable ways
-        </section>
+	  <h1>we are good to go, except..</h1>
+          <ul>
+            <li class="fragment">everything that takes 100% resources is bound to thrash on itself</li>
+            <li class="fragment">no downtime</li>
+            <li class="fragment">maintenance</li>
+            <li class="fragment">GC</li>
+            <li class="fragment">recovery</li>
+            <li class="fragment">dependencies</li>
+          </ul>
+            <aside class="notes">
+              1 request 10ms<br>
+              2 requests 25ms<br>
+              3 requests 40ms<br>
+
+              boxes will go down<br>
+              you will have to move them around<br>
+              groups of boxes are also likely to go down (switch issues, router issues, blade issues, rack issues)<br>
+	      GC - it <b>will</b> stop randomly for at least a second<br>
+              the dependencies a distributed system has are just <b>brutal</b>.
+          </aside>
+	</section>
 
         <section>
-          <h2>so lets couple 5 of those monsters to have hard dependency on each other</h2>
+	  <h2>add more boxes</h2>
           <p>
             <ul>
-              <li>agree on state</li>
-              <li>trust</li>
+              <li>+ replicas: throughput and resiliende</li>
+              <li>+ shards: decrease latency</li>
             </ul>
-          <hr>
-          now tell me again, how easy it is to make that work
           </p>
-        </section>
+	</section>
+
         <section>
-          <h2>game</h2>
-          <pre><code class='cpp'>#define XY(x,y)     ((x) &lt;&lt; 32 | (y))
-#define GET_X(pos)  ((pos) &gt;&gt; 32)
-#define GET_Y(pos)  ((pos) & 0xFFFFFFFF)
-#define STEP_X(pos) XY(GET_X(pos) + 1,GET_Y(pos))
-#define STEP_Y(pos) XY(GET_X(pos),GET_Y(pos) + 1)
-uint64_t position = 0;</code></pre>
-                        <p>
-                          <ul>
-                            <li>position encoded as <b>one</b> 64 bit integer</li>
-                            <li>5 <b>online</b> players</li>
-                            <li>mine for gold</li>
-                            <li><b>no</b> collisions</li>
-                        </ul>
-                        </p>
-                        <img src="game.png" width=50%>
-                        <aside class="notes">
-                          centralized<br><br>
-                          distributed<br><br>
-                          what is distributed<br>
-                          means that things communicate and interact with each other by passing messages to reach a common goal<br>
-                          2 phase commit:<br>
-                          prepare phase<br>
-                          commit phase<br>
-                          raft:<br>
-                          leader election<br>
-                          replication log<br>
-                          get Paxos/Raft implementation
-                          just use ZooKeeper (proto is inspired by Paxos)
-                        </aside>
-        </section>
-        <section>
-          <h2>ElasticSearch - how do you update stuff</h2>
+	  <h2>warstories</h2>
           <p>
-          <ul>
-            <li>Java minor version bump</li>
-            <li>ElasticSearch</li>
-            <li>kernel</li>
-          </ul>
+            <ul>In my humble experience I have seen(unreproducable):
+              <li class="fragment">random stop</li>
+              <li class="fragment">random 100% cpu</li>
+              <li class="fragment">reboot and never start again</li>
+              <li class="fragment">random crash (panics, jvm death etc)</li>
+              <li class="fragment">deadlock magic everywhere</li>
+              <li class="fragment">broken tcp state</li>
+              <li class="fragment">switch sending traffic only to ODD mac addresses</li>
+              <li class="fragment">NIC firmware messups</li>
+              <li class="fragment">everything started works, everything new hangs</li>
+            </ul>
           </p>
-        </section>
-        <section>
-          <h2>rolling</h2>
-          <p>
-          <ul>
-            <li>stop shard reallocation</li>
-            <li>shut down the node</li>
-            <li>update</li>
-            <li>start</li>
-            <li>wait to join</li>
-            <li>repeat</li>
-          </ul>
+          <p class="fragment">
+            mostly due to hardware issues, triggering weird behavior in unpredictable ways
           </p>
         </section>
 
         <section>
-          <h2>cluster restart</h2>
-          <p>
+          <h3>update/upgrade ElasticSearch/java/kernel</h3>
           <ul>
-            <li>disable reallocation</li>
-            <li>shut down everything</li>
-            <li>update</li>
-            <li>start</li>
-            <li>hope</li>
+            <li class="fragment">rolling restart</li>
+            <li class="fragment">cluster restart (<b>hope</b>, 99.9% uptime?)</li>
+            <li class="fragment">cluster split (capacity?)</li>
+            <li class="fragment">growing cluster (capacity?)</li>
           </ul>
-          <hr>
-          huh? what about 99.9% uptime?
-          </p>
-        </section>
-        <section>
-          <h2>cluster split</h2>
-          <p>
-          <ul>
-            <li>split the cluster in 2</li>
-            <li>move all traffic to 1/2 of it</li>
-            <li>update the other 1/2</li>
-            <li>move the traffic back</li>
-            <li>update first 1/2</li>
-            <li>join them</li>
-          </ul>
-          <hr>
-          wait, that requires 100% over-capacity
-          </p>
-        </section>
-
-        <section>
-          <h2>growing cluster</h2>
-          <p>
-          <ul>
-            <li>take one node out to new cluster</li>
-            <li>update it</li>
-            <li>move all the traffic to this cluster</li>
-            <li>repeat: take one more box out of the old cluster</li>
-            <li>update it</li>
-            <li>move it to the new cluster</li>
-            <li>goto repeat</li>
-          </ul>
-          <hr>
-          wait, can one node service 100% of the requests?
-          <hr>
-          <small>maybe we will just stop for 20 minutes in the middle of the night, nobody will notice..</small>
-          </p>
+          <aside class="notes">
+            stop shard reallocataion<br>
+            do you have enough capacity?<br>
+            99.9% uptime?<br>
+          </aside>
         </section>
         <section>
           <h2>who is in charge?</h2>
@@ -586,7 +445,7 @@ uint64_t position = 0;</code></pre>
             <li>index metadata</li>
           </ul>
           <hr>
-          <b>master</b>
+          <b>master(s)</b>
           </p>
         </section>
 
@@ -616,7 +475,7 @@ uint64_t position = 0;</code></pre>
                 <li>loss</li>
               </ul>
             </li>
-            <li>openfds
+            <li>open file descriptors
               <ul>
                 <li>segments</li>
               </ul>
@@ -625,36 +484,14 @@ uint64_t position = 0;</code></pre>
           </p>
         </section>
         <section>
-          <h2>wait, what were Inverted Indexes again?</h2>
+          <h3>how did we get here?</h3>
           <p>
-          <ul>do you really need?
-            <li>distributed system</li>
-            <li>updateable indexes</li>
-            <li>nice REST API</li>
-          </ul>
-          <hr>
-          we just want to <b>store</b> and <b>search</b>
+            we just want to <b>store</b> and <b>search</b>
           </p>
         </section>
 
         <section>
-          <h2>game - partial world</h2>
-          <p>
-            <pre><code class='c'>uint64_t partial[] = { XY(0,0) };                   // player 0
-uint64_t partial[] = { XY(1,0) };                   // player 1
-uint64_t partial[] = { XY(2,0) };                   // player 2
-uint64_t partial[] = { XY(0,1) XY(1,1), XY(2,1) };  // player 3
-uint64_t partial[] = { XY(0,2) XY(1,2), XY(2,2) };  // player 4</code></pre>
-          <ul>
-            <li>+simple</li>
-            <li>+players do not need to be aware of each other</li>
-            <li>-someone else must do the gold merge</li>
-          </ul>
-          </p>
-        </section>
-
-        <section>
-          <h4>store</h4>
+          <h4>how to store JSON in Lucene</h4>
           <p>
             <pre><code class='java'>// read [ { "field": "value" }, .. ] from STDIN and store each hash as a Lucene document
 // thank you stackoverflow
@@ -679,7 +516,7 @@ json.endArray();
 json.close();</code></pre></p>
         </section>
         <section>
-          <h4>search</h4><p>
+          <h4>how to search in Lucene</h4><p>
           <pre><code class='java'>// return top documents matching 'new AND york' as [ { "key":"value" }.. ]
 IndexReader reader = DirectoryReader.open(writer,false);
 IndexSearcher searcher = new IndexSearcher(reader);
@@ -701,6 +538,7 @@ reader.close();
 return output;</code></pre></p>
         </section>
         <section>
+          <h2>hack your own search</h2>
           <p>using sun.http or netty or jetty or whatever tty you like, you can easilly hack your own search service</p>
           <p>&nbsp;</p>
           <p>simple topN recepie</p>
@@ -734,9 +572,7 @@ return output;</code></pre></p>
 	<section>
 	  <h1>thank you</h1>
 	</section>
-
       </div>
-
     </div>
 
     <script src="lib/js/head.min.js"></script>
