@@ -144,6 +144,7 @@ documents in the inverted index are sorted by document id
           <h2>again: What is ElasticSearch</h2>
           <p>
             <ul>
+              <li>amazing</li>
               <li>distributed</li>
               <li>takes care of things like
                 <ul>
@@ -204,7 +205,7 @@ int main(void) {
             took: 5ms
           </p>
           <p class="fragment">
-            split the work 120 times, took: 47us
+            split the work to 120 pieces, took: 47us
           </p>
           <p class="fragment">
             linear
@@ -258,9 +259,8 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
 	  <p>
             <ul>
               <li class="fragment">100_000_000 documents</li>
-              <li class="fragment">finding</li>
               <li class="fragment">sorting</li>
-              <li class="fragment">by relevance</li>
+              <li class="fragment">by relevance (using complex ranking functions)</li>
               <li class="fragment">on the fly</li>
               <li class="fragment">within milliseconds</li>
               <li class="fragment">using only 5 boxes</li>
@@ -332,13 +332,22 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
             even the most complex query is aligning all subqueries to be on the same doc<br>
           </aside>
         </section>
-
+        <section>
+	  <h1>why does that matter?</h1>
+          <ul>
+            <li class="fragment">linear</li>
+            <li class="fragment">capacity</li>
+            <li class="fragment">know your data, restrucutre if needed</li>
+            <li class="fragment">plan for stress</li>
+          </ul>
+        </section>
         <section>
 	  <h1>we are good to go, except..</h1>
           <ul>
             <li class="fragment">everything that takes 100% resources is bound to thrash on itself</li>
             <li class="fragment">no downtime</li>
             <li class="fragment">maintenance</li>
+            <li class="fragment">monitoring</li>
             <li class="fragment">GC</li>
           </ul>
             <aside class="notes">
@@ -358,32 +367,11 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
 	  <h2>add more boxes</h2>
           <p>
             <ul>
-              <li>+ replicas: throughput and resiliende</li>
+              <li>+ replicas: throughput and resilience</li>
               <li>+ shards: decrease latency</li>
             </ul>
           </p>
 	</section>
-
-        <section>
-	  <h2>warstories</h2>
-          <p>
-            <ul>In my humble experience I have seen(unreproducable):
-              <li class="fragment">random stop</li>
-              <li class="fragment">random 100% cpu</li>
-              <li class="fragment">reboot and never start again</li>
-              <li class="fragment">random crash (panics, jvm death etc)</li>
-              <li class="fragment">deadlock magic everywhere</li>
-              <li class="fragment">broken tcp state</li>
-              <li class="fragment">switch sending traffic only to ODD mac addresses</li>
-              <li class="fragment">NIC firmware messups</li>
-              <li class="fragment">everything started works, everything new hangs</li>
-            </ul>
-          </p>
-          <p class="fragment">
-            mostly due to hardware issues, triggering weird behavior in unpredictable ways
-          </p>
-        </section>
-
         <section>
           <h3>update/upgrade ElasticSearch/java/kernel</h3>
           <ul>
@@ -405,18 +393,17 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
               <li>create/delete/open/close of indexes</li>
               <li>shard allocation</li>
               <li>index metadata</li>
-          </ul>
-          <hr>
-          <b>master(s)</b>
+            </ul>
+            <hr>
+            <b>master(s)</b>
           </p>
         </section>
 
         <section>
-          <h2>split brain and point of view</h2>
+          <h2>split brain and data loss</h2>
           <p>
             <ul>
-              <li>master election</li>
-              <li>master only nodes</li>
+              <li>dedicated master nodes</li>
               <li>minimum master nodes - (N / 2) + 1</li>
             </ul>
             <img src="split.png" width=70%>
@@ -444,6 +431,26 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
           </ul>
           </p>
         </section>
+        <section>
+	  <h2>warstories</h2>
+          <p>
+            <ul>In my humble experience I have seen(unreproducable):
+              <li class="fragment">random stop</li>
+              <li class="fragment">random 100% cpu</li>
+              <li class="fragment">reboot and never start again</li>
+              <li class="fragment">random crash (panics, jvm death etc)</li>
+              <li class="fragment">deadlock magic everywhere</li>
+              <li class="fragment">broken tcp state</li>
+              <li class="fragment">switch sending traffic only to ODD mac addresses</li>
+              <li class="fragment">NIC firmware messups</li>
+              <li class="fragment">everything started works, everything new hangs</li>
+            </ul>
+          </p>
+          <p class="fragment">
+            mostly due to hardware issues, triggering weird behavior in unpredictable ways
+          </p>
+        </section>
+
         <section>
           <h3>how did we get here?</h3>
           <p>
