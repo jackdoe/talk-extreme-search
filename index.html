@@ -75,18 +75,16 @@
 	    <code class='perl'>
               <pre>
 my $forward = [
-        'new york',        # 0
-        'paris',           # 1
-        'new york state',  # 2
-        'new hotel'        # 3
+        'perl / ruby benchmark',      # 0
+        'perl / python benchmark',    # 1
+        'ruby / python benchmark',    # 2
 ];
 
 my $inverted = {
-        'new'   => [ 0, 2, 3 ],
-        'york'  => [ 0, 2 ],
-        'paris' => [ 1 ],
-        'state' => [ 2 ],
-        'hotel' => [ 3 ]
+        'benchmark' => [ 0, 1, 2 ],
+        'perl'      => [ 0, 1 ],
+        'ruby'      => [ 0, 2 ],
+        'python'    => [ 1, 2 ],
 };
 </pre>
 </code>
@@ -95,24 +93,19 @@ documents in the inverted index are sorted by document id
 	</section>
 
         <section>
-	  <h2>new AND york</h2>
+	  <h2>perl AND ruby</h2>
           <p>
 	    <code class='perl'>
               <pre>
-   my @ids = search("new AND york");
-   # 0, 2
-   # fetch from the forward index: $forward->[0], $forward->[2]
+   my @ids = search("perl AND ruby");
+   # fetch from the forward index: $forward->[0]
 
-   my @ids = search("new OR york");
-   # 0, 2, 3
+   my @ids = search("perl OR ruby");
    # fetch from the forward index: $forward->[0],
    #                               $forward->[2],
    #                               $forward->[3]
 </pre>
             </code>
-            <ul>
-              <li>AND: 2 comparisons</li>
-              <li>OR: 3 comparisons</li>
             </ul>
           </p>
           <aside class="notes">
@@ -231,15 +224,15 @@ int main(void) {
 	  <h2>search </h2>
           <pre><code class='perl'>my @docs = ();
 for (1.. (100_000_000 / 120)) {
-    push @docs, { name => ($_ % 10 == 0 ? 'new york' : 'new') }
+    push @docs, { name => ($_ % 10 == 0 ? 'perl ruby' : 'perl') }
 }
 $engine->index(\@docs);
 my $t0 = time();
 my $results = search({
     bool => {
         must => [
-            { term => { name => "new"  } },
-            { term => { name => "york" } }
+            { term => { name => "perl"  } },
+            { term => { name => "ruby" } }
         ]
     }
 });
@@ -268,29 +261,29 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
 	</section>
 
         <section>
-          <h2>new AND york</h2>
+          <h2>perl AND ruby</h2>
           <p>
             <pre>
               <code>{
-    'new'  => [ 1,   3,   277, 46000, 64973,   78688, ... ], # 876_962 documents
-    'york' => [ 300, 456, 736, 837,   7278 ... 50000, ... ]  # 51_345 documents
+    'perl'  => [ 1,   3,   277, 46000, 64973,   78688, ... ], # 876_962 documents
+    'ruby' => [ 300, 456, 736, 837,   7278 ... 50000, ... ]  # 51_345 documents
 }</code>
           </pre>
           <ol>
             <li class="fragment">pick a leading query</li>
-            <li class="fragment">leading = 'york', at 300</li>
-            <li class="fragment"><b>advance</b> 'new' to 300 -> closest is 46000</li>
-            <li class="fragment"><b>advance</b> 'york' to 46000 -> closest is 50000</li>
+            <li class="fragment">leading = 'ruby', at 300</li>
+            <li class="fragment"><b>advance</b> 'perl' to 300 -> closest is 46000</li>
+            <li class="fragment"><b>advance</b> 'ruby' to 46000 -> closest is 50000</li>
             <li class="fragment">goto 2. with target 50000</li>
           </ol>
           </p>
           <aside class="notes">
-            worst case is that ALL documents from york match on new<br>
+            worst case is that ALL documents from ruby match on perl<br>
           </aside>
         </section>
         <section>
           <h2>show me the code!</h2>
-          "new AND york"
+          "perl AND ruby"
           <p>
           <pre><code class='java'>int doNext(int target) throws Exception {
     for(;;) {
@@ -480,12 +473,12 @@ json.close();</code></pre></p>
         </section>
         <section>
           <h4>how to search in Lucene</h4><p>
-          <pre><code class='java'>// return top documents matching 'new AND york' as [ { "key":"value" }.. ]
+          <pre><code class='java'>// return top documents matching 'perl AND ruby' as [ { "key":"value" }.. ]
 IndexReader reader = DirectoryReader.open(writer,false);
 IndexSearcher searcher = new IndexSearcher(reader);
 Query q = new BooleanQuery();
-q.add(new TermQuery(new Term("name","new")),BooleanClause.Occur.MUST);
-q.add(new TermQuery(new Term("name","york")),BooleanClause.Occur.MUST);
+q.add(new TermQuery(new Term("name","perl")),BooleanClause.Occur.MUST);
+q.add(new TermQuery(new Term("name","ruby")),BooleanClause.Occur.MUST);
 TopDocs results = searcher.search(q, null,100);
 ScoreDoc[] hits = results.scoreDocs;
 List&lt;Map&lt;String,String&gt;&gt; output = new ArrayList&lt;Map&lt;String,String&gt;&gt;();
