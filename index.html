@@ -200,9 +200,6 @@ int main(void) {
           <p class="fragment">
             split the work to 120 pieces, took: 47us
           </p>
-          <p class="fragment">
-            linear
-          </p>
         </section>
         <section>
 	  <h2>estimate work per thread</h2>
@@ -310,8 +307,9 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
         <section>
 	  <h1>why does that matter?</h1>
           <ul>
-            <li class="fragment">linear</li>
-            <li class="fragment">capacity</li>
+            <li class="fragment">linear with number of <b>matching</b> documents</li>
+            <li class="fragment">total number of documents is irrelevant</li>
+            <li class="fragment">plan capacity</li>
             <li class="fragment">know your data, restrucutre if needed</li>
             <li class="fragment">plan for stress</li>
           </ul>
