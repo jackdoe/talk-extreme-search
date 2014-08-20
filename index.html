@@ -360,7 +360,11 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
 	</section>
         <section>
           <h3>update/upgrade ElasticSearch/java/kernel</h3>
+          <p>
+            always stop shard reallocation first
+          </p>
           <ul>
+
             <li class="fragment">rolling restart</li>
             <li class="fragment">cluster restart (<b>hope</b>, 99.9% uptime?)</li>
             <li class="fragment">cluster split (capacity?)</li>
@@ -415,6 +419,7 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
                 <li>segments</li>
               </ul>
             </li>
+            <li>start with JMX so you can<br>profile/thread dump/heapdump with few mouse clicks</li>
           </ul>
           </p>
         </section>
@@ -422,18 +427,17 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
 	  <h2>warstories</h2>
           <p>
             <ul>In my humble experience I have seen(unreproducable):
-              <li class="fragment">random stop</li>
-              <li class="fragment">random 100% cpu</li>
-              <li class="fragment">reboot and never start again</li>
-              <li class="fragment">random crash (panics, jvm death etc)</li>
-              <li class="fragment">deadlock magic everywhere</li>
-              <li class="fragment">broken tcp state</li>
-              <li class="fragment">switch sending traffic only to ODD mac addresses</li>
-              <li class="fragment">NIC firmware messups</li>
-              <li class="fragment">everything started works, everything new hangs</li>
+              <li>random stop/100% cpu</li>
+              <li>reboot and never start again</li>
+              <li>random crash (panics, jvm death etc)</li>
+              <li>deadlock magic everywhere</li>
+              <li>broken tcp state</li>
+              <li>switch sending traffic only to ODD mac addresses</li>
+              <li>NIC firmware messups</li>
+              <li>everything started works, everything new hangs</li>
             </ul>
           </p>
-          <p class="fragment">
+          <p>
             mostly due to hardware issues, triggering weird behavior in unpredictable ways
           </p>
         </section>
