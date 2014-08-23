@@ -100,8 +100,8 @@ documents in the inverted index are sorted by document id
 
    my @ids = search($inverted, "perl OR ruby");
    # matching: $book->[0], "... perl / ruby benchmark ..."
-   #           $book->[1], "... perl / python benchmark ..."
    #           $book->[2], "... ruby / python benchmark ..."
+   #           $book->[1], "... perl / python benchmark ..."
    #           $book->[3], "... perl is awesome ..." // below ruby/python?
    #                                                 // "ruby" is less common than "perl"
 </pre>
