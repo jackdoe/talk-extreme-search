@@ -214,7 +214,7 @@ int main(void) {
         <section>
 	  <h2>search </h2>
           <pre><code class='perl'>my @docs = ();
-for (1.. (100_000_000 / 120)) {
+for (1.. (100_000_000 / 120)) { # 833333
     push @docs, { name => ($_ % 10 == 0 ? 'perl ruby' : 'perl') }
 }
 $engine->index(\@docs);
