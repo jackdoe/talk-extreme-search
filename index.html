@@ -387,16 +387,17 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
           </aside>
         </section>
         <section>
-          <h2>master(s)</h2>
+          <h2>master</h2>
           <p>
+            coordinates cluster wide changes, like:
             <ul>
+              <li>addition/removal of nodes</li>
               <li>create/delete/open/close of indexes</li>
               <li>shard (re)allocation</li>
               <li>index metadata</li>
             </ul>
           </p>
         </section>
-
         <section>
           <h2>split brain and data loss</h2>
           <p>
