@@ -325,6 +325,18 @@ for(i = 0; i < 9000; i++) { if (i % 2 == 0) j++; }</code></pre>
             </ul>
 	  </p>
 	</section>
+
+        <section>
+	  <h2>120 shards, scatter/gather</h2>
+	  <p>
+            <ul>
+              <li class="fragment">application asks random node<b>A</b></li>
+              <li class="fragment">node<b>A</b> will ask one random node for each of the 120 shards.</li>
+              <li class="fragment">will merge the results</li>
+            </ul>
+	  </p>
+	</section>
+
         <section>
 	  <h1>we are good to go, except..</h1>
           <ul>
